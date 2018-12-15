@@ -35,14 +35,6 @@ think() {
 }
 
 
-KD_API KD_EXPORT int
-kd_project_entry()
-{
-        kd_load(0);
-        return 1; /* 1 for good, 0 for fail */
-}
-
-
 /* ----------------------------------------------- Application Description -- */
 
 
