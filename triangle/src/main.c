@@ -1,4 +1,5 @@
 #include <karbon/drive.h>
+#include <karbon/app.h>
 #include <GL/gl3w.h>
 #include <assert.h>
 #include <math.h>
@@ -7,13 +8,16 @@
 /* this Open GL code is modified from https://open.gl/drawing */
 
 
+/* ----------------------------------------------------------- Application -- */
+
+
 struct ogl_triangle {
         GLuint vao, vbo, pro;
 } tri;
 
 
-KD_API KD_EXPORT void
-kd_setup() {
+void
+setup() {
         gl3wInit();
         
         /* vao */
@@ -70,16 +74,16 @@ kd_setup() {
 }
 
 
-KD_API KD_EXPORT void
-kd_shutdown() {
+void
+shutdown() {
         glDeleteProgram(tri.pro);
         glDeleteBuffers(1, &tri.vbo);
         glDeleteVertexArrays(1, &tri.vao);
 }
 
 
-KD_API KD_EXPORT void
-kd_think() {
+void
+think() {
         struct kd_window_desc win_desc = {0};
         win_desc.type_id = KD_STRUCT_WINDOW_DESC;
         kd_result ok = kd_window_get(&win_desc);
@@ -108,3 +112,14 @@ kd_project_entry() {
         kd_load(0);
         return 1; /* 1 for good, 0 for fail */
 }
+
+
+/* ----------------------------------------------- Application Description -- */
+
+
+KD_APP_NAME("OpenGL Triangle")
+KD_APP_DESC("Rendering a triangle with OpenGL")
+KD_APP_GRAPHICS_API("OpenGL")
+KD_APP_STARTUP_FN(setup)
+KD_APP_TICK_FN(think)
+KD_APP_SHUTDOWN_FN(shutdown)
