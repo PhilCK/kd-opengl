@@ -2,6 +2,7 @@
 #include <karbon/app.h>
 #include <GL/gl3w.h>
 #include <assert.h>
+#include <stdio.h>
 #include <math.h>
 
 
@@ -15,7 +16,16 @@ struct ogl_clear_color {
 
 void
 setup() {
-        gl3wInit();
+        kd_gl_make_current();
+
+        if (gl3wInit()) {
+                assert(!"FAILED TO INIT");
+        }
+        if (!gl3wIsSupported(3, 2)) {
+                assert(!"OGL 3 2 not supported");
+        }
+        printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION),
+                glGetString(GL_SHADING_LANGUAGE_VERSION));
         clear_color.timer = 0.f;
 }
 
