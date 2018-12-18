@@ -94,29 +94,12 @@ shutdown() {
 
 void
 think() {
-        /* check input */
-        //struct kd_keyboard_desc kb;
-        //kd_input_get_keyboards(&kb);
-
-        //if (kb.kb_state[0][KD_KB_ANY] == KD_KEY_UP_EVENT)
-        //{
-        //        /* look for next */
-        //}
-
-        /* switch ogl demo */
-        //int loaded_libs;
-        //kd_ctx_get_loaded_libraries(&loaded_libs);
-
-        struct kd_loaded_lib {
-                const char *name;
-                const char *desc;
-                const char *graphics_api;
-        };
-
-        //struct kd_window_desc win_desc = {0};
-        //win_desc.type_id = KD_STRUCT_WINDOW_DESC;
-        //kd_result ok = kd_window_get(&win_desc);
-        //assert(ok == KD_RESULT_OK);
+        /* switch to next app */
+        struct kd_keyboard_desc kb;
+        kd_input_get_keyboards(&kb);
+        if (kb.kb_state[0][KD_KB_ANY] & KD_KEY_UP_EVENT) {
+                printf("Any key was pressed");
+        }
 
         /* clear */
         glClearColor(0.2, 0.15, 0.15, 1);

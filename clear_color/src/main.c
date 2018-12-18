@@ -32,6 +32,13 @@ setup() {
 
 void
 think() {
+        /* switch to next app */
+        struct kd_keyboard_desc kb;
+        kd_input_get_keyboards(&kb);
+        if (kb.kb_state[0][KD_KB_ANY] & KD_KEY_UP_EVENT) {
+                printf("Any key was pressed");
+        }
+
         /* project tick */
         clear_color.timer += 0.16f;
 
