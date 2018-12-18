@@ -21,8 +21,15 @@ setup() {
         if (gl3wInit()) {
                 assert(!"FAILED TO INIT");
         }
-        if (!gl3wIsSupported(3, 2)) {
-                assert(!"OGL 3 2 not supported");
+        
+        /* print out version */
+        printf("OpenGL %s, GLSL %s, OGL %s\n",
+            glGetString(GL_VERSION),
+            glGetString(GL_SHADING_LANGUAGE_VERSION),
+            glGetString(GL_VERSION));
+
+        if (!gl3wIsSupported(3, 0)) {
+                assert(!"OGL 3 0 not supported");
         }
         printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION),
                 glGetString(GL_SHADING_LANGUAGE_VERSION));

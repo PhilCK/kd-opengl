@@ -17,6 +17,19 @@ struct ogl_triangle {
 } tri;
 
 
+#define GL_ERR(msg) \
+do { \
+        GLuint err = glGetError(); \
+        if(err) { \
+                printf("GL Err: %d - %s\n", err, msg); \
+                assert(0); \
+        } \
+} while(0); 
+
+
+#define GL_DEBUG_HELPERS 1
+
+
 void
 setup() {
         kd_gl_make_current();
@@ -24,17 +37,34 @@ setup() {
         if (gl3wInit()) {
                 assert(!"FAILED TO INIT");
         }
-        if (!gl3wIsSupported(3, 2)) {
-                assert(!"OGL 3 2 not supported");
-        }
-        printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION),
-                glGetString(GL_SHADING_LANGUAGE_VERSION));
         
+        /* print out version */
+        printf("OpenGL %s, GLSL %s, OGL %s\n",
+            glGetString(GL_VERSION),
+            glGetString(GL_SHADING_LANGUAGE_VERSION),
+            glGetString(GL_VERSION));
+
+        if (!gl3wIsSupported(3, 0)) {
+                assert(!"OGL 3 0 not supported");
+        }
+
+        if(GL_DEBUG_HELPERS && glPushDebugGroup) {
+                glPushDebugGroup(
+                        GL_DEBUG_SOURCE_APPLICATION,
+                        GL_DEBUG_TYPE_PUSH_GROUP,
+                        -1,
+                        "Triangle Setup");
+        }
+
         /* vao */
         GLuint vao;
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
         tri.vao = vao;
+        
+        if(GL_DEBUG_HELPERS && glObjectLabel) {
+                glObjectLabel(GL_VERTEX_ARRAY, vao, -1, "Triangle::VAO");
+        }
 
         /* vbo */
         GLfloat verts[] = {
@@ -44,13 +74,18 @@ setup() {
         };
 
         GLuint vbo;
-        glBindBuffer(GL_ARRAY_BUFFER, &vbo);
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
         tri.vbo = vbo;
 
+        if(GL_DEBUG_HELPERS && glObjectLabel) {
+                glObjectLabel(GL_BUFFER, vbo, -1, "Triangle::VBO");
+        }
+
         /* shd */
         const GLchar *vs_src = ""
-                "#version 150 core\n"
+                "#version 130\n"
                 "in vec2 position;\n"
                 "void main() {\n"
                         "gl_Position = vec4(position, 0.0, 1.0);\n"
@@ -59,9 +94,17 @@ setup() {
         GLuint vs_shd = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vs_shd, 1, &vs_src, NULL);
         glCompileShader(vs_shd);
+        GLint vs_status;
+        glGetShaderiv(vs_shd, GL_COMPILE_STATUS, &vs_status);
+        if(vs_status == GL_FALSE) {
+                char buffer[1024];
+                glGetShaderInfoLog(vs_shd, sizeof(buffer), NULL, buffer);
+                printf("GL Shd Err: %s\n", buffer);
+                assert(!"Failed to build vs shd");
+        }
 
         const GLchar *fs_src = ""
-                "#version 150 core\n"
+                "#version 130\n"
                 "out vec4 outColor;\n"
                 "void main() {\n"
                         "outColor = vec4(1.0, 1.0, 1.0, 1.0);\n"
@@ -70,17 +113,43 @@ setup() {
         GLuint fs_shd = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fs_shd, 1, &fs_src, NULL);
         glCompileShader(fs_shd);
+        GLint fs_status;
+        glGetShaderiv(fs_shd, GL_COMPILE_STATUS, &fs_status);
+        if(fs_status == GL_FALSE) {
+                char buffer[1024];
+                glGetShaderInfoLog(vs_shd, sizeof(buffer), NULL, buffer);
+                printf("GL Shd Err: %s\n", buffer);
+                assert(!"Failed to build fs shd");
+        }
 
         GLuint pro = glCreateProgram();
         glAttachShader(pro, vs_shd);
         glAttachShader(pro, fs_shd);
         glBindFragDataLocation(pro, 0, "outColor");
         glLinkProgram(pro);
+        GLint pro_status;
+        glGetProgramiv(pro, GL_LINK_STATUS, &pro_status);
+        if(pro_status == GL_FALSE) {
+                char buffer[1024];
+                glGetProgramInfoLog(pro, sizeof(buffer), NULL, buffer);
+                printf("GL Pro Err: %s\n", buffer);
+                assert(!"Failed to link");
+        }
 
         glDeleteShader(vs_shd);
         glDeleteShader(fs_shd);
 
         tri.pro = pro;
+
+        if(GL_DEBUG_HELPERS && glObjectLabel) {
+                glObjectLabel(GL_PROGRAM, pro, -1, "Fill::White");
+        }
+
+        GL_ERR("Setup")
+
+        if(GL_DEBUG_HELPERS && glPopDebugGroup) {
+                glPopDebugGroup();
+        }
 }
 
 
@@ -101,21 +170,42 @@ think() {
                 printf("Any key was pressed");
         }
 
+        /* render */
+        if(GL_DEBUG_HELPERS && glPushDebugGroup) {
+                glPushDebugGroup(
+                        GL_DEBUG_SOURCE_APPLICATION,
+                        GL_DEBUG_TYPE_PUSH_GROUP,
+                        -1,
+                        "Triangle Render");
+        }
+
         /* clear */
+        glViewport(0, 0, 600, 600);
         glClearColor(0.2, 0.15, 0.15, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        GL_ERR("Clear")
 
         /* setup */
         glBindVertexArray(tri.vao);
+        GL_ERR("Setup - VAO")
         glUseProgram(tri.pro);
+        GL_ERR("Setup - use program")
+        glBindBuffer(GL_ARRAY_BUFFER, tri.vbo);
+        GL_ERR("Setup")
 
         /* input */
         GLint posAttrib = glGetAttribLocation(tri.pro, "position");
         glEnableVertexAttribArray(posAttrib);
         glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
+        GL_ERR("Input")
 
         /* draw */
         glDrawArrays(GL_TRIANGLES, 0, 3);
+        GL_ERR("Draw")
+
+        if(GL_DEBUG_HELPERS && glPopDebugGroup) {
+                glPopDebugGroup();
+        }
 }
 
 
