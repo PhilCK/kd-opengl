@@ -5,16 +5,18 @@
 #include <stdio.h>
 #include <math.h>
 
+#define STB_IMAGE_IMPLEMENTATION 
+#include "stb_image.h"
 
-/* this OpenGL code is modified from https://open.gl/drawing */
+/* this OpenGL code is modified from https://open.gl/textures */
 
 
 /* ----------------------------------------------------------- Application -- */
 
 
-struct ogl_triangle {
-        GLuint vao, vbo, pro;
-} tri;
+struct ogl_texture {
+        GLuint vao, ebo, tex1, tex2, vbo, pro;
+} tex;
 
 
 #define GL_ERR(msg) \
@@ -60,34 +62,68 @@ setup() {
         GLuint vao;
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
-        tri.vao = vao;
+        tex.vao = vao;
         
         if(GL_DEBUG_HELPERS && glObjectLabel) {
-                glObjectLabel(GL_VERTEX_ARRAY, vao, -1, "Triangle::VAO");
+                glObjectLabel(GL_VERTEX_ARRAY, vao, -1, "Quad::VAO");
         }
 
+        /* ebo */
+        GLuint idx[] = {
+                0,1,2,
+                2,3,0
+        };
+
+        GLuint ebo;
+        glGenBuffers(1, &ebo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(idx), idx, GL_STATIC_DRAW);
+        tex.ebo = ebo;
+
+        if(GL_DEBUG_HELPERS && glObjectLabel) {
+                glObjectLabel(GL_BUFFER, ebo, -1, "Quad::EBO");
+        }
+        
         /* vbo */
         GLfloat verts[] = {
-                0.0f,  0.5f,
-                0.5f, -0.5f,
-                -0.5f, -0.5f
+                //  Position      Color             Texcoords
+                -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
+                 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
+                 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
+                -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
         };
 
         GLuint vbo;
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
-        tri.vbo = vbo;
+        tex.vbo = vbo;
 
         if(GL_DEBUG_HELPERS && glObjectLabel) {
-                glObjectLabel(GL_BUFFER, vbo, -1, "Triangle::VBO");
+                glObjectLabel(GL_BUFFER, vbo, -1, "Quad::VBO::v2v3v2");
         }
+
+        /* textures */
+        GLint tex1;
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, &tex1);
+
+        int w, h, c;
+        unsigned char* img1 = stbi_load("sample.png", &w, &h, &c, STBI_rgb);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, img1);
+        tex.tex1 = tex1;
 
         /* shd */
         const GLchar *vs_src = ""
                 "#version 130\n"
                 "in vec2 position;\n"
+                "in vec3 color;\n"
+                "in vec2 texcoord;\n"
+                "out vec3 Color;\n"
+                "out vec2 Texcoord;\n"
                 "void main() {\n"
+                        "Color = color;\n"
+                        "Texcoord = texcoord;\n"
                         "gl_Position = vec4(position, 0.0, 1.0);\n"
                 "}";
 
@@ -105,9 +141,13 @@ setup() {
 
         const GLchar *fs_src = ""
                 "#version 130\n"
+                "in vec3 Color;\n"
+                "in vec2 Texcoord;\n"
+                "uniform sampler2D texKitten;\n"
+                "uniform sampler2D texPuppy;\n"
                 "out vec4 outColor;\n"
                 "void main() {\n"
-                        "outColor = vec4(1.0, 1.0, 1.0, 1.0);\n"
+                        "outColor = vec4(1,0,0,1);\n"
                 "}\n";
 
         GLuint fs_shd = glCreateShader(GL_FRAGMENT_SHADER);
@@ -139,10 +179,10 @@ setup() {
         glDeleteShader(vs_shd);
         glDeleteShader(fs_shd);
 
-        tri.pro = pro;
+        tex.pro = pro;
 
         if(GL_DEBUG_HELPERS && glObjectLabel) {
-                glObjectLabel(GL_PROGRAM, pro, -1, "Fill::White");
+                glObjectLabel(GL_PROGRAM, pro, -1, "Fill::Textures");
         }
 
         GL_ERR("Setup")
@@ -155,9 +195,9 @@ setup() {
 
 void
 shutdown() {
-        glDeleteProgram(tri.pro);
-        glDeleteBuffers(1, &tri.vbo);
-        glDeleteVertexArrays(1, &tri.vao);
+        glDeleteProgram(tex.pro);
+        glDeleteBuffers(1, &tex.vbo);
+        glDeleteVertexArrays(1, &tex.vao);
 }
 
 
@@ -197,21 +237,39 @@ think() {
         GL_ERR("Clear")
 
         /* setup */
-        glBindVertexArray(tri.vao);
+        glBindVertexArray(tex.vao);
         GL_ERR("Setup - VAO")
-        glUseProgram(tri.pro);
+        glUseProgram(tex.pro);
         GL_ERR("Setup - use program")
-        glBindBuffer(GL_ARRAY_BUFFER, tri.vbo);
-        GL_ERR("Setup")
+        glBindBuffer(GL_ARRAY_BUFFER, tex.vbo);
+        GL_ERR("Setup - vbo")
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tex.ebo);
+        GL_ERR("Setup - ebo");
 
         /* input */
-        GLint posAttrib = glGetAttribLocation(tri.pro, "position");
-        glEnableVertexAttribArray(posAttrib);
-        glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 0, 0);
-        GL_ERR("Input")
+        GLint posAttrib = glGetAttribLocation(tex.pro, "position");
+        if(posAttrib > -1) {
+                glEnableVertexAttribArray(posAttrib);
+                glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), 0);
+                GL_ERR("Input - POS")
+        }
+
+        GLint colAttrib = glGetAttribLocation(tex.pro, "color");
+        if(colAttrib > -1) {
+                glEnableVertexAttribArray(colAttrib);
+                glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+                GL_ERR("Input - COL2")
+        }
+
+        GLint texAttrib = glGetAttribLocation(tex.pro, "texcoord");
+        if(texAttrib > -1) {
+                glEnableVertexAttribArray(texAttrib);
+                glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void*)(5 * sizeof(GLfloat)));
+                GL_ERR("Input - TC")
+        }
 
         /* draw */
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         GL_ERR("Draw")
 
         if(GL_DEBUG_HELPERS && glPopDebugGroup) {
@@ -223,8 +281,8 @@ think() {
 /* ----------------------------------------------- Application Description -- */
 
 
-KD_APP_NAME("OpenGL Triangle")
-KD_APP_DESC("Rendering a triangle with OpenGL")
+KD_APP_NAME("OpenGL Textures")
+KD_APP_DESC("Rendering a quad with Textures in OpenGL")
 KD_APP_GRAPHICS_API("OpenGL")
 KD_APP_STARTUP_FN(setup)
 KD_APP_TICK_FN(think)

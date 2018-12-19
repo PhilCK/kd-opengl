@@ -39,11 +39,22 @@ setup() {
 
 void
 think() {
-        /* switch to next app */
+         /* switch to next app */
         struct kd_keyboard_desc kb;
         kd_input_get_keyboards(&kb);
-        if (kb.kb_state[0][KD_KB_ANY] & KD_KEY_UP_EVENT) {
-                printf("Any key was pressed");
+        if (kb.kb_state[0][KD_KB_ANY] & KD_KEY_DOWN_EVENT) {
+                /* change state */
+                int app_idx, app_count;
+                kd_ctx_application_index_get(&app_idx, &app_count);
+
+                int next_idx = (app_idx + 1) % app_count;
+                printf(
+                        "Curr IDX(%d) of (%d), Next IDX(%d)",
+                        app_idx,
+                        app_count,
+                        next_idx);
+
+                kd_ctx_application_index_set(next_idx);
         }
 
         /* project tick */
