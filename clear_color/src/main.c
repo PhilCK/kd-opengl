@@ -33,7 +33,8 @@ setup() {
         }
         printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION),
                 glGetString(GL_SHADING_LANGUAGE_VERSION));
-        clear_color.timer = 0.f;
+
+        clear_color.timer = 0.3f;
 }
 
 
@@ -59,7 +60,7 @@ think() {
 
         /* project tick */
         clear_color.timer += 0.16f;
-
+        
         float r = (2.f + sinf(clear_color.timer * 0.15f)) / 2.f;
         float g = (2.f + cosf(clear_color.timer * 0.20f)) / 2.f;
         float b = (2.f + sinf(clear_color.timer * 0.10f)) / 2.f;

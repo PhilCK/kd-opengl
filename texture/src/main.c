@@ -8,6 +8,7 @@
 #define STB_IMAGE_IMPLEMENTATION 
 #include "stb_image.h"
 
+
 /* this OpenGL code is modified from https://open.gl/textures */
 
 
@@ -55,7 +56,7 @@ setup() {
                         GL_DEBUG_SOURCE_APPLICATION,
                         GL_DEBUG_TYPE_PUSH_GROUP,
                         -1,
-                        "Triangle Setup");
+                        "Tex Quad Setup");
         }
 
         /* vao */
@@ -65,7 +66,7 @@ setup() {
         tex.vao = vao;
         
         if(GL_DEBUG_HELPERS && glObjectLabel) {
-                glObjectLabel(GL_VERTEX_ARRAY, vao, -1, "Quad::VAO");
+                glObjectLabel(GL_VERTEX_ARRAY, vao, -1, "TexQuad::VAO");
         }
 
         /* ebo */
@@ -81,16 +82,16 @@ setup() {
         tex.ebo = ebo;
 
         if(GL_DEBUG_HELPERS && glObjectLabel) {
-                glObjectLabel(GL_BUFFER, ebo, -1, "Quad::EBO");
+                glObjectLabel(GL_BUFFER, ebo, -1, "TexQuad::EBO::ui");
         }
         
         /* vbo */
+        /* pos v2 - color v3 - tc v2 */
         GLfloat verts[] = {
-                //  Position      Color             Texcoords
-                -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // Top-left
-                 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // Top-right
-                 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // Bottom-right
-                -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // Bottom-left
+                -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
+                 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+                -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
         };
 
         GLuint vbo;
@@ -100,18 +101,66 @@ setup() {
         tex.vbo = vbo;
 
         if(GL_DEBUG_HELPERS && glObjectLabel) {
-                glObjectLabel(GL_BUFFER, vbo, -1, "Quad::VBO::v2v3v2");
+                glObjectLabel(GL_BUFFER, vbo, -1, "TexQuad::VBO::v2v3v2");
         }
 
         /* textures */
-        GLint tex1;
+        GLuint tex1;
+        glGenTextures(1, &tex1);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, &tex1);
+        glBindTexture(GL_TEXTURE_2D, tex1);
 
         int w, h, c;
-        unsigned char* img1 = stbi_load("sample.png", &w, &h, &c, STBI_rgb);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, img1);
+        const char *t1 = "/home/phil/scratch/kd-opengl/texture/src/sample.png";
+        unsigned char* img1 = stbi_load(t1, &w, &h, &c, 0);
+
+        printf("Loaded Image 1: %dx%d:%d\n", w, h, c);
+
+        glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_RGB,
+                w,
+                h,
+                0,
+                c == 4 ? GL_RGBA : GL_RGB,
+                GL_UNSIGNED_BYTE,
+                img1);
+
         tex.tex1 = tex1;
+        stbi_image_free(img1);
+
+        if(GL_DEBUG_HELPERS && glObjectLabel) {
+                glObjectLabel(GL_TEXTURE, tex1, -1, "TexQuad::Sample1");
+        }
+
+        GLuint tex2;
+        glGenTextures(1, &tex2);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, tex2);
+
+        const char *t2 = "/home/phil/scratch/kd-opengl/texture/src/sample2.png";
+        unsigned char *img2 = stbi_load(t2, &w, &h, &c, 0);
+
+        printf("Loaded Image 2: %dx%d:%d\n", w, h, c);
+
+        glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_RGB,
+                w,
+                h,
+                0,
+                c == 4 ? GL_RGBA : GL_RGB,
+                GL_UNSIGNED_BYTE,
+                img2);
+        
+        if(GL_DEBUG_HELPERS && glObjectLabel) {
+                glObjectLabel(GL_TEXTURE, tex1, -1, "TexQuad::Sample2");
+        }
+
+        tex.tex2 = tex2;
+        stbi_image_free(img2);
 
         /* shd */
         const GLchar *vs_src = ""
@@ -147,7 +196,9 @@ setup() {
                 "uniform sampler2D texPuppy;\n"
                 "out vec4 outColor;\n"
                 "void main() {\n"
-                        "outColor = vec4(1,0,0,1);\n"
+                        "outColor = mix("
+                                "texture(texKitten, Texcoord),"
+                                "texture(texPuppy, Texcoord), 0.5);\n"
                 "}\n";
 
         GLuint fs_shd = glCreateShader(GL_FRAGMENT_SHADER);
@@ -182,7 +233,7 @@ setup() {
         tex.pro = pro;
 
         if(GL_DEBUG_HELPERS && glObjectLabel) {
-                glObjectLabel(GL_PROGRAM, pro, -1, "Fill::Textures");
+                glObjectLabel(GL_PROGRAM, pro, -1, "TexQuad::Fill");
         }
 
         GL_ERR("Setup")
@@ -195,6 +246,8 @@ setup() {
 
 void
 shutdown() {
+        glDeleteTextures(1, tex.tex1);
+        glDeleteTextures(1, tex.tex2);
         glDeleteProgram(tex.pro);
         glDeleteBuffers(1, &tex.vbo);
         glDeleteVertexArrays(1, &tex.vao);
@@ -227,7 +280,7 @@ think() {
                         GL_DEBUG_SOURCE_APPLICATION,
                         GL_DEBUG_TYPE_PUSH_GROUP,
                         -1,
-                        "Triangle Render");
+                        "Tex Quad Render");
         }
 
         /* clear */
@@ -246,25 +299,47 @@ think() {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tex.ebo);
         GL_ERR("Setup - ebo");
 
-        /* input */
-        GLint posAttrib = glGetAttribLocation(tex.pro, "position");
-        if(posAttrib > -1) {
-                glEnableVertexAttribArray(posAttrib);
-                glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), 0);
-                GL_ERR("Input - POS")
-        }
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex.tex1);
+        glUniform1i(glGetUniformLocation(tex.pro, "texKitten"), 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        GLint colAttrib = glGetAttribLocation(tex.pro, "color");
-        if(colAttrib > -1) {
-                glEnableVertexAttribArray(colAttrib);
-                glVertexAttribPointer(colAttrib, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void*)(2 * sizeof(GLfloat)));
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, tex.tex2);
+        glUniform1i(glGetUniformLocation(tex.pro, "texPuppy"), 1);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        /* input */
+        GLsizei jmp = 7 * sizeof(GLfloat);
+        void *off = 0;
+
+        GLint pos_a = glGetAttribLocation(tex.pro, "position");
+        if(pos_a > -1) {
+                glEnableVertexAttribArray(pos_a);
+                glVertexAttribPointer(pos_a, 2, GL_FLOAT, GL_FALSE, jmp, off);
+                GL_ERR("Input - POS")
+
+        }
+        off = (void*)(2 * sizeof(GLfloat));
+
+        GLint col_a = glGetAttribLocation(tex.pro, "color");
+        if(col_a > -1) {
+                glEnableVertexAttribArray(col_a);
+                glVertexAttribPointer(col_a, 3, GL_FLOAT, GL_FALSE, jmp, off);
                 GL_ERR("Input - COL2")
         }
+        off = (void*)(5 * sizeof(GLfloat));
 
-        GLint texAttrib = glGetAttribLocation(tex.pro, "texcoord");
-        if(texAttrib > -1) {
-                glEnableVertexAttribArray(texAttrib);
-                glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 7 * sizeof(GLfloat), (void*)(5 * sizeof(GLfloat)));
+        GLint tex_a = glGetAttribLocation(tex.pro, "texcoord");
+        if(tex_a > -1) {
+                glEnableVertexAttribArray(tex_a);
+                glVertexAttribPointer(tex_a, 2, GL_FLOAT, GL_FALSE, jmp, off);
                 GL_ERR("Input - TC")
         }
 
