@@ -634,9 +634,10 @@ for i, proj in ipairs(projects) do
 
                     -- Linux Copy --
                     elseif os.target() == "linux" then
-                        local full_dest_dir = out_dir .. config.name .. "/assets/"
-                        proj["postbuildcommands"] = "test -d " .. full_dest_dir .. " || mkdir -p " .. full_dest_dir
-                        proj["postbuildcommands"] = "cp -rf " .. src_dir .. "* " .. full_dest_dir .. " 2>/dev/null || :"
+                        local full_dest_dir = "./bin/" .. config.name .. "/assets/"
+                        
+                        postbuildcommands("test -d " .. full_dest_dir .. " || mkdir -p " .. full_dest_dir)
+                        postbuildcommands("cp -rf " .. src_dir .. "* " .. full_dest_dir .. " 2>/dev/null || :")
                     -- Windows Copy --
                     elseif os.target() == "windows" then
                         local win_src_dir = src_dir
@@ -651,7 +652,6 @@ for i, proj in ipairs(projects) do
                         proj["postbuildcommands"] = "xcopy /s/z/y \"" .. win_src_dir .. "*.*\" \"" .. win_dest_dir .. "*.*\""
                     end
 
-                    postbuildcommands(proj["postbuildcommands"])
                 end
             end
 

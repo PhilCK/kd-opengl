@@ -1,9 +1,14 @@
 #include <karbon/drive.h>
 #include <karbon/app.h>
+
+#define COMMON_IMPL
+#include <common.h>
+
 #include <GL/gl3w.h>
 #include <assert.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 
 /* this OpenGL code is modified from https://open.gl/drawing */
@@ -17,36 +22,12 @@ struct ogl_triangle {
 } tri;
 
 
-#define GL_ERR(msg) \
-do { \
-        GLuint err = glGetError(); \
-        if(err) { \
-                printf("GL Err: %d - %s\n", err, msg); \
-                assert(0); \
-        } \
-} while(0); 
-
-
-#define GL_DEBUG_HELPERS 1
-
-
 void
-setup() {
-        kd_gl_make_current();
+setup()
+{
+        memset(&tri, 0, sizeof(tri));
 
-        if (gl3wInit()) {
-                assert(!"FAILED TO INIT");
-        }
-        
-        /* print out version */
-        printf("OpenGL %s, GLSL %s, OGL %s\n",
-            glGetString(GL_VERSION),
-            glGetString(GL_SHADING_LANGUAGE_VERSION),
-            glGetString(GL_VERSION));
-
-        if (!gl3wIsSupported(3, 0)) {
-                assert(!"OGL 3 0 not supported");
-        }
+        cmn_setup();
 
         if(GL_DEBUG_HELPERS && glPushDebugGroup) {
                 glPushDebugGroup(
@@ -154,7 +135,8 @@ setup() {
 
 
 void
-shutdown() {
+shutdown()
+{
         glDeleteProgram(tri.pro);
         glDeleteBuffers(1, &tri.vbo);
         glDeleteVertexArrays(1, &tri.vao);
@@ -162,24 +144,11 @@ shutdown() {
 
 
 void
-think() {
-        /* switch to next app */
-        struct kd_keyboard_desc kb;
-        kd_input_get_keyboards(&kb);
-        if (kb.kb_state[0][KD_KB_ANY] & KD_KEY_DOWN_EVENT) {
-                /* change state */
-                int app_idx, app_count;
-                kd_ctx_application_index_get(&app_idx, &app_count);
+think()
+{
+        cmn_process_events();
 
-                int next_idx = (app_idx + 1) % app_count;
-                printf(
-                        "Curr IDX(%d) of (%d), Next IDX(%d)",
-                        app_idx,
-                        app_count,
-                        next_idx);
-
-                kd_ctx_application_index_set(next_idx);
-        }
+        GL_ERR("New Frame");
 
         /* render */
         if(GL_DEBUG_HELPERS && glPushDebugGroup) {
@@ -217,6 +186,8 @@ think() {
         if(GL_DEBUG_HELPERS && glPopDebugGroup) {
                 glPopDebugGroup();
         }
+
+        GL_ERR("End Frame");
 }
 
 

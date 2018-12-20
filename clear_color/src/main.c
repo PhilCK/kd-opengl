@@ -1,9 +1,14 @@
 #include <karbon/drive.h>
 #include <karbon/app.h>
+
+#define COMMON_IMPL
+#include <common.h>
+
 #include <GL/gl3w.h>
 #include <assert.h>
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 
 /* ----------------------------------------------------------- Application -- */
@@ -15,8 +20,11 @@ struct ogl_clear_color {
 
 
 void
-setup() {
-        kd_gl_make_current();
+setup()
+{
+        memset(&clear_color, 0, sizeof(clear_color));
+
+        cmn_setup();
 
         if (gl3wInit()) {
                 assert(!"FAILED TO INIT");
@@ -39,7 +47,12 @@ setup() {
 
 
 void
-think() {
+think()
+{
+        cmn_process_events();
+
+        GL_ERR("New Frame");
+
          /* switch to next app */
         struct kd_keyboard_desc kb;
         kd_input_get_keyboards(&kb);
@@ -68,6 +81,8 @@ think() {
 
         glClearColor(r, g, b, a);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        GL_ERR("End Frame");
 }
 
 

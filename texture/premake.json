@@ -12,7 +12,8 @@
                         ],
 
                         "include_dirs" : [
-                                "./src"
+                                "./src",
+                                "../common"
                         ],
 
                         "dependencies" : [
