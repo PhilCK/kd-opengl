@@ -21,6 +21,10 @@
 
                         "links-windows" : [
                                 "opengl32.lib"
+                        ],
+
+                        "asset_dirs" : [
+                                "./src/assets/"
                         ]
                 }
         ]

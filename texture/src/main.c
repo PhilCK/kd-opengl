@@ -43,9 +43,9 @@ setup() {
         
         /* print out version */
         printf("OpenGL %s, GLSL %s, OGL %s\n",
-            glGetString(GL_VERSION),
-            glGetString(GL_SHADING_LANGUAGE_VERSION),
-            glGetString(GL_VERSION));
+                glGetString(GL_VERSION),
+                glGetString(GL_SHADING_LANGUAGE_VERSION),
+                glGetString(GL_VERSION));
 
         if (!gl3wIsSupported(3, 0)) {
                 assert(!"OGL 3 0 not supported");
@@ -105,63 +105,73 @@ setup() {
         }
 
         /* textures */
-        GLuint tex1;
-        glGenTextures(1, &tex1);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, tex1);
-
         int w, h, c;
-        const char *t1 = "/home/phil/scratch/kd-opengl/texture/src/sample.png";
-        unsigned char* img1 = stbi_load(t1, &w, &h, &c, 0);
+        char t[2048] = {0};
+        kd_ctx_get_exe_dir(&t, 0);
+        strcat(t, "assets/sample.png");
 
-        printf("Loaded Image 1: %dx%d:%d\n", w, h, c);
+        unsigned char* img1 = stbi_load(&t[0], &w, &h, &c, 0);
 
-        glTexImage2D(
-                GL_TEXTURE_2D,
-                0,
-                GL_RGB,
-                w,
-                h,
-                0,
-                c == 4 ? GL_RGBA : GL_RGB,
-                GL_UNSIGNED_BYTE,
-                img1);
+        if(img1) {
+                printf("Loaded Image 1: %dx%d:%d\n", w, h, c);
 
-        tex.tex1 = tex1;
-        stbi_image_free(img1);
+                GLuint tex1;
+                glGenTextures(1, &tex1);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, tex1);
 
-        if(GL_DEBUG_HELPERS && glObjectLabel) {
-                glObjectLabel(GL_TEXTURE, tex1, -1, "TexQuad::Sample1");
+                glTexImage2D(
+                        GL_TEXTURE_2D,
+                        0,
+                        GL_RGB,
+                        w,
+                        h,
+                        0,
+                        c == 4 ? GL_RGBA : GL_RGB,
+                        GL_UNSIGNED_BYTE,
+                        img1);
+
+                tex.tex1 = tex1;
+
+                stbi_image_free(img1);
+                if (GL_DEBUG_HELPERS && glObjectLabel) {
+                        glObjectLabel(GL_TEXTURE, tex1, -1, "TexQuad::Sample1");
+                }
         }
 
-        GLuint tex2;
-        glGenTextures(1, &tex2);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, tex2);
+        memset(t, 0, sizeof(t));
+        kd_ctx_get_exe_dir(&t, 0);
+        strcat(t, "assets/sample2.png");
 
-        const char *t2 = "/home/phil/scratch/kd-opengl/texture/src/sample2.png";
-        unsigned char *img2 = stbi_load(t2, &w, &h, &c, 0);
+        unsigned char *img2 = stbi_load(t, &w, &h, &c, 0);
 
-        printf("Loaded Image 2: %dx%d:%d\n", w, h, c);
+        if(img2) {
+                printf("Loaded Image 2: %dx%d:%d\n", w, h, c);
 
-        glTexImage2D(
-                GL_TEXTURE_2D,
-                0,
-                GL_RGB,
-                w,
-                h,
-                0,
-                c == 4 ? GL_RGBA : GL_RGB,
-                GL_UNSIGNED_BYTE,
-                img2);
+                GLuint tex2;
+                glGenTextures(1, &tex2);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, tex2);
+
+                glTexImage2D(
+                        GL_TEXTURE_2D,
+                        0,
+                        GL_RGB,
+                        w,
+                        h,
+                        0,
+                        c == 4 ? GL_RGBA : GL_RGB,
+                        GL_UNSIGNED_BYTE,
+                        img2);
+
+                if (GL_DEBUG_HELPERS && glObjectLabel) {
+                        glObjectLabel(GL_TEXTURE, tex2, -1, "TexQuad::Sample2");
+                }
+
+                tex.tex2 = tex2;
+                stbi_image_free(img2);
+        }
         
-        if(GL_DEBUG_HELPERS && glObjectLabel) {
-                glObjectLabel(GL_TEXTURE, tex1, -1, "TexQuad::Sample2");
-        }
-
-        tex.tex2 = tex2;
-        stbi_image_free(img2);
-
         /* shd */
         const GLchar *vs_src = ""
                 "#version 130\n"
@@ -246,8 +256,14 @@ setup() {
 
 void
 shutdown() {
-        glDeleteTextures(1, tex.tex1);
-        glDeleteTextures(1, tex.tex2);
+        if(tex.tex1) {
+                glDeleteTextures(1, &tex.tex1);
+        }
+
+        if(tex.tex2) {
+                glDeleteTextures(1, &tex.tex2);
+        }
+
         glDeleteProgram(tex.pro);
         glDeleteBuffers(1, &tex.vbo);
         glDeleteVertexArrays(1, &tex.vao);

@@ -171,6 +171,17 @@ for i, file in ipairs(project_files) do
             end
         end 
 
+        -- Update asset paths --
+        if proj_table.asset_dirs then
+            for k, a in ipairs(proj_table.asset_dirs) do
+                local abs_dir  = path.getabsolute(file)
+                local dir      = path.getdirectory(abs_dir)
+                local new_path = dir .. "/" .. a
+
+                proj_table.asset_dirs[k] = new_path
+            end
+        end
+
         -- Linking --
         if proj_table.linkable == nil then
             proj_table["linkable"] = true;
@@ -560,11 +571,21 @@ for i, proj in ipairs(projects) do
 
     local proj_links = find_table(proj, "links")
 
-    if true then 
+    if debug_print then 
         print("Links: " .. table.tostring(proj_links))
     end
 
     links(proj_links)
+
+    -- Assets --
+
+    local proj_post = find_table(proj, "postbuildcommands")
+
+    if true then
+        print("Post Cmds: " .. table.tostring(proj_post))
+    end
+
+    postbuildcommands(proj_post)
 
     -- defines --
 
@@ -598,6 +619,42 @@ for i, proj in ipairs(projects) do
             optimize(config.optimize)
             floatingpoint(config.fast_float)
             architecture("x64")
+
+            if proj.asset_dirs then
+
+                for i, src_dir in ipairs(proj.asset_dirs) do
+                    
+                    -- MacOSX Copy --
+                    if os.target() == "macosx" then
+                        if proj["kind"] == "WindowedApp" then
+                            proj["postbuildcommands"] = "ditto " .. src_dir .." ${CONFIGURATION_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/assets/"
+                        elseif proj["kind"] == "ConsoleApp" then
+                            proj["postbuildcommands"] = "ditto " .. src_dir .." ${CONFIGURATION_BUILD_DIR}/assets/";
+                        end
+
+                    -- Linux Copy --
+                    elseif os.target() == "linux" then
+                        local full_dest_dir = out_dir .. config.name .. "/assets/"
+                        proj["postbuildcommands"] = "test -d " .. full_dest_dir .. " || mkdir -p " .. full_dest_dir
+                        proj["postbuildcommands"] = "cp -rf " .. src_dir .. "* " .. full_dest_dir .. " 2>/dev/null || :"
+                    -- Windows Copy --
+                    elseif os.target() == "windows" then
+                        local win_src_dir = src_dir
+                        local win_dest_dir = path.getabsolute(out_dir)
+
+                        if win_src_dir[-1] ~= "/" then win_src_dir = win_src_dir .. "/" end
+                        if win_dest_dir[-1] ~= "/" then win_dest_dir = win_dest_dir .. "/" end
+
+                        win_src_dir = string.gsub(src_dir, "/", "\\")
+                        win_dest_dir = ".\\bin\\" .. config.name .. "\\assets\\"
+
+                        proj["postbuildcommands"] = "xcopy /s/z/y \"" .. win_src_dir .. "*.*\" \"" .. win_dest_dir .. "*.*\""
+                    end
+
+                    postbuildcommands(proj["postbuildcommands"])
+                end
+            end
+
     end
 
 end
