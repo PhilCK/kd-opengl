@@ -19,7 +19,7 @@ void
 cmd_setup();
 
 
-void
+uint64_t
 cmn_process_events();
 
 
@@ -51,7 +51,7 @@ cmn_setup()
         if (gl3wInit()) {
                 assert(!"FAILED TO INIT");
         }
-        
+
         /* print out version */
         printf("OpenGL %s, GLSL %s, OGL %s\n",
                 glGetString(GL_VERSION),
@@ -60,12 +60,11 @@ cmn_setup()
 
         if (!gl3wIsSupported(3, 0)) {
                 assert(!"OGL 3 0 not supported");
-        }
-  
+        } 
 }
 
 
-void
+uint64_t
 cmn_process_events()
 {
         kd_result ok = KD_RESULT_OK;
@@ -77,31 +76,40 @@ cmn_process_events()
 
         /* screen was resized */
         if(events & KD_EVENT_VIEWPORT_RESIZE) {
-                /*
                 struct kd_window_desc win_desc;
                 win_desc.type_id = KD_STRUCT_WINDOW_DESC;
                 kd_window_get(&win_desc);
 
                 glViewport(0, 0, win_desc.width, win_desc.height);
-                */
         }
 
         /* a key was pushed */
         if(events & KD_EVENT_INPUT_KB) {
-                int app_idx, app_count;
-                ok = kd_ctx_application_index_get(&app_idx, &app_count);
-                assert(ok == KD_RESULT_OK && "Failed to get index");
+                struct kd_keyboard_desc kb_desc;
+                ok = kd_input_get_keyboards(&kb_desc);
+                printf("res %d == %d\n", ok, KD_RESULT_OK);
+                assert(ok == KD_RESULT_OK && "Failed to get kb desc");
+                assert(kb_desc.kb_count && "No kb found");
 
-                int next_idx = (app_idx + 1) % app_count;
-                printf(
-                        "Curr IDX(%d) of (%d), Next IDX(%d)",
-                        app_idx,
-                        app_count,
-                        next_idx);
+                if(kb_desc.kb_state[0][KD_KB_ANY] & KD_KEY_UP_EVENT) {
 
-                ok = kd_ctx_application_index_set(next_idx);
-                assert(ok == KD_RESULT_OK && "Failed to set index");
+                        int app_idx, app_count;
+                        ok = kd_ctx_application_index_get(&app_idx, &app_count);
+                        assert(ok == KD_RESULT_OK && "Failed to get index");
+
+                        int next_idx = (app_idx + 1) % app_count;
+                        printf(
+                                "Curr IDX(%d) of (%d), Next IDX(%d)",
+                                app_idx,
+                                app_count,
+                                next_idx);
+
+                        ok = kd_ctx_application_index_set(next_idx);
+                        assert(ok == KD_RESULT_OK && "Failed to set index");
+                }
         }
+
+        return events;
 }
 
 

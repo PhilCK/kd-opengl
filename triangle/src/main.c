@@ -160,7 +160,6 @@ think()
         }
 
         /* clear */
-        glViewport(0, 0, 600, 600);
         glClearColor(0.2, 0.15, 0.15, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         GL_ERR("Clear")
