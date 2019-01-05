@@ -32,17 +32,18 @@ setup()
         
         /* print out version */
         printf("OpenGL %s, GLSL %s, OGL %s\n",
-            glGetString(GL_VERSION),
-            glGetString(GL_SHADING_LANGUAGE_VERSION),
-            glGetString(GL_VERSION));
+                glGetString(GL_VERSION),
+                glGetString(GL_SHADING_LANGUAGE_VERSION),
+                glGetString(GL_VERSION));
 
         if (!gl3wIsSupported(3, 0)) {
                 assert(!"OGL 3 0 not supported");
         }
+
         printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION),
                 glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-        clear_color.timer = 0.3f;
+        GL_ERR("GL - Setup");
 }
 
 
@@ -50,8 +51,8 @@ void
 think()
 {
         cmn_process_events();
-
-        GL_ERR("New Frame");
+        
+        GL_ERR("GL - New Frame");
 
         /* project tick */
         clear_color.timer += 0.16f;
@@ -64,7 +65,7 @@ think()
         glClearColor(r, g, b, a);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        GL_ERR("End Frame");
+        GL_ERR("GL - End Frame");
 }
 
 

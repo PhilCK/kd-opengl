@@ -4,6 +4,11 @@
     in repo, then all the files are parsed here, then finally the parsed data
     is translated into premake calls. No premake api interaction should happen
     outside of this script.
+
+    requires to be run with premake.
+    E.g: premake vs2017
+
+    https://premake.github.io/download.html
 ]]--
 
 
@@ -619,6 +624,10 @@ for i, proj in ipairs(projects) do
             optimize(config.optimize)
             floatingpoint(config.fast_float)
             architecture("x64")
+
+            if os.target() == "windows" then
+                staticruntime("On")
+            end
 
             if proj.asset_dirs then
 

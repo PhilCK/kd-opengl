@@ -273,6 +273,7 @@ think()
 
         /* clear */
         glClearColor(0.2, 0.15, 0.15, 1);
+        glDisable(GL_STENCIL_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         GL_ERR("Clear")
 

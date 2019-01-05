@@ -2,21 +2,21 @@
 #define COMMON_INCLUDED
 
 
-#define GL_ERR(msg) \
-do { \
-        GLuint err = glGetError(); \
-        if(err) { \
-                printf("GL Err: %d - %s\n", err, msg); \
-                assert(!msg); \
-        } \
-} while(0); 
+#define GL_ERR(msg)                                     \
+do {                                                    \
+        GLuint err = glGetError();                      \
+        if(err) {                                       \
+                printf("GL Err: %d - %s\n", err, msg);  \
+                assert(!msg);                           \
+        }                                               \
+} while(0);                                             \
 
 
 #define GL_DEBUG_HELPERS 1
 
 
 void
-cmd_setup();
+cmn_setup();
 
 
 uint64_t
@@ -58,8 +58,8 @@ cmn_setup()
                 glGetString(GL_SHADING_LANGUAGE_VERSION),
                 glGetString(GL_VERSION));
 
-        if (!gl3wIsSupported(3, 0)) {
-                assert(!"OGL 3 0 not supported");
+        if (!gl3wIsSupported(3, 2)) {
+                assert(!"OGL 3 2 not supported");
         } 
 }
 
@@ -73,6 +73,11 @@ cmn_process_events()
         uint64_t events = 0;
         ok = kd_events_get(&events);
         assert(ok == KD_RESULT_OK && "Failed to get events");
+
+        #ifndef NDEBUG
+        /* clear gl errors */
+        while(glGetError()){}
+        #endif
 
         /* screen was resized */
         if(events & KD_EVENT_VIEWPORT_RESIZE) {
@@ -93,21 +98,23 @@ cmn_process_events()
 
                 if(kb_desc.kb_state[0][KD_KB_ANY] & KD_KEY_UP_EVENT) {
 
-                        int app_idx, app_count;
-                        ok = kd_ctx_application_index_get(&app_idx, &app_count);
+                        int app_idx, app_cnt;
+                        ok = kd_ctx_application_index_get(&app_idx, &app_cnt);
                         assert(ok == KD_RESULT_OK && "Failed to get index");
 
-                        int next_idx = (app_idx + 1) % app_count;
+                        int next_idx = (app_idx + 1) % app_cnt;
                         printf(
                                 "Curr IDX(%d) of (%d), Next IDX(%d)",
                                 app_idx,
-                                app_count,
+                                app_cnt,
                                 next_idx);
 
                         ok = kd_ctx_application_index_set(next_idx);
                         assert(ok == KD_RESULT_OK && "Failed to set index");
                 }
         }
+
+        GL_ERR("GL - Common Setup")
 
         return events;
 }
