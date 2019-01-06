@@ -1,0 +1,32 @@
+{
+        "projects" : [
+                {
+                        "name" : "04_ogl_mesh_outline",
+                        "kind" : "SharedLib",
+                        "language" : "C",
+
+                        "files" : [
+                                "./**.json",
+                                "./**.h",
+                                "./**.c"
+                        ],
+
+                        "include_dirs" : [
+                                "./src",
+                                "../common"
+                        ],
+
+                        "dependencies" : [
+                                "karbon_drive"
+                        ],
+
+                        "links-windows" : [
+                                "opengl32.lib"
+                        ],
+
+                        "asset_dirs" : [
+                                "./src/assets/"
+                        ]
+                }
+        ]
+}

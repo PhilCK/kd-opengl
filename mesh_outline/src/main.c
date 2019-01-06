@@ -54,7 +54,7 @@ setup()
         }
         
         /* vbo */
-        /* pos v2 - color v3 - tc v2 */
+        /* pos v3 - color v3 - tc v2 */
         GLfloat verts[] = {
                 -0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
                 0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
@@ -97,13 +97,6 @@ setup()
                 0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
                 -0.5f,  0.5f,  0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,
                 -0.5f,  0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-
-                -1.0f, -1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-                1.0f, -1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-                1.0f,  1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-                1.0f,  1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-                -1.0f,  1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-                -1.0f, -1.0f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f
         };
 
         GLuint vbo;
@@ -189,15 +182,15 @@ setup()
                 "in vec3 position;\n"
                 "in vec3 color;\n"
                 "in vec2 texcoord;\n"
-                "out vec3 Color;\n"
+                "out vec4 Color;\n"
                 "out vec2 Texcoord;\n"
-                "uniform vec3 overrideColor;\n"
+                "uniform vec4 overrideColor;\n"
                 "uniform mat4 model;\n"
                 "uniform mat4 view;\n"
                 "uniform mat4 proj;\n"
                 "void main() {\n"
                         "Texcoord = texcoord;\n"
-                        "Color = overrideColor * color;\n"
+                        "Color = overrideColor * vec4(color, 1.0);\n"
                         "gl_Position = proj * view * model * vec4(position, 1.0);\n"
                 "}";
 
@@ -216,12 +209,13 @@ setup()
         const GLchar *fs_src = ""
                 "#version 130\n"
                 "in vec2 Texcoord;\n"
-                "in vec3 Color;\n"
+                "in vec4 Color;\n"
                 "uniform sampler2D texKitten;\n"
                 "uniform sampler2D texPuppy;\n"
                 "out vec4 outColor;\n"
                 "void main() {\n"
-                        "outColor = vec4(Color, 1.0) * mix(texture(texKitten, Texcoord), texture(texPuppy, Texcoord), 0.5);\n"
+                        "vec4 tex = mix(texture(texKitten, Texcoord), texture(texPuppy, Texcoord), 0.5);\n"
+                        "outColor = mix(Color, tex, Color.a);\n"
                 "}\n";
 
         GLuint fs_shd = glCreateShader(GL_FRAGMENT_SHADER);
@@ -290,8 +284,8 @@ render(int steps) {
         struct kd_window_desc win_desc;
         win_desc.type_id = KD_STRUCT_WINDOW_DESC;
         kd_window_get(&win_desc);
-        
-        GL_ERR("New frame");
+
+        win_desc.width /= 2;
 
         /* render */
         if(GL_DEBUG_HELPERS && glPushDebugGroup) {
@@ -299,12 +293,17 @@ render(int steps) {
                         GL_DEBUG_SOURCE_APPLICATION,
                         GL_DEBUG_TYPE_PUSH_GROUP,
                         -1,
-                        "Cube Render");
+                        "Cube Render Wireframe");
         }
-       
+
+        /* clear */
+        glClearColor(0.2, 0.15, 0.15, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        GL_ERR("Clear")
+        
         /* setup */
-        glEnable(GL_DEPTH_TEST);
         glDisable(GL_STENCIL_TEST);
+        glEnable(GL_DEPTH_TEST);
 
         glBindVertexArray(cube.vao);
         GL_ERR("Setup - VAO")
@@ -313,14 +312,9 @@ render(int steps) {
         glBindBuffer(GL_ARRAY_BUFFER, cube.vbo);
         GL_ERR("Setup - vbo")
 
-        /* clear */
-        glClearColor(0.2, 0.15, 0.15, 1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-        GL_ERR("Clear")
-
         /* draw cube */
         GLint color = glGetUniformLocation(cube.pro, "overrideColor");
-        glUniform3f(color, 1.0f, 1.0f, 1.0f);
+        glUniform4f(color, 1.0f, 0.0f, 0.0f, 0.f);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cube.tex1);
@@ -348,10 +342,10 @@ render(int steps) {
         glUniformMatrix4fv(model_i, 1, GL_FALSE, model);
 
         float view[16];
-        
-        float x = sinf(cube.time) * 4.f;
-        float y = cosf(cube.time) * 4.f;
-        float z = 2.f;
+
+        float x = sinf(cube.time) * 2.2f;
+        float y = cosf(cube.time) * 2.2f;
+        float z = 1.2f;
         
         float eye[3];
         eye[0] = x;
@@ -365,7 +359,7 @@ render(int steps) {
         glUniformMatrix4fv(view_i, 1, GL_FALSE, view);
 
         float proj[16];
-        float ratio = (float)(win_desc.width / 3) / (float)win_desc.height;
+        float ratio = (float)win_desc.width / (float)win_desc.height;
         float fov = KDM_TAU * 0.125f;
         kdm_mat4_perspective_projection(ratio, 0.1f, 100.f, fov, proj);
         GLint proj_i = glGetUniformLocation(cube.pro, "proj");
@@ -400,8 +394,12 @@ render(int steps) {
         }
         GL_ERR("Vertex Attrs")
 
+        glEnable(GL_LINE_SMOOTH);
+        glLineWidth(4.f);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         GL_ERR("Draw")
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         if(GL_DEBUG_HELPERS && glPopDebugGroup) {
                 glPopDebugGroup();
@@ -411,57 +409,21 @@ render(int steps) {
                 return;
         }
 
-        /* draw floor */
         if(GL_DEBUG_HELPERS && glPushDebugGroup) {
                 glPushDebugGroup(
                         GL_DEBUG_SOURCE_APPLICATION,
                         GL_DEBUG_TYPE_PUSH_GROUP,
                         -1,
-                        "Cube Floor");
+                        "Cube Render Diffuse");
         }
 
-        glEnable(GL_STENCIL_TEST);
-
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-        glStencilMask(0xFF);
-        glDepthMask(GL_FALSE);
-        glClear(GL_STENCIL_BUFFER_BIT);
-
-        glDrawArrays(GL_TRIANGLES, 36, 6);
-
-        glStencilFunc(GL_EQUAL, 1, 0xFF);
-        glStencilMask(0x00);
-        glDepthMask(GL_TRUE);
-
-        if(GL_DEBUG_HELPERS && glPopDebugGroup) {
-                glPopDebugGroup();
-        }
-
-        if (steps == 2) {
-                return;
-        }
-
-        /* drw reflection */
-        if(GL_DEBUG_HELPERS && glPushDebugGroup) {
-                glPushDebugGroup(
-                        GL_DEBUG_SOURCE_APPLICATION,
-                        GL_DEBUG_TYPE_PUSH_GROUP,
-                        -1,
-                        "Cube Reflection");
-        }
-
-        model[14] = -1;
-        glUniformMatrix4fv(model_i, 1, GL_FALSE, model);
-        glUniform3f(color, 0.3f, 0.3f, 0.3f);
-        
+        glUniform4f(color, 1.0f, 0.0f, 0.0f, 1.f);
+        glClear(GL_DEPTH_BUFFER_BIT);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
         if(GL_DEBUG_HELPERS && glPopDebugGroup) {
                 glPopDebugGroup();
         }
-
-        GL_ERR("End Frame");
 }
 
 
@@ -476,64 +438,21 @@ think()
         win_desc.type_id = KD_STRUCT_WINDOW_DESC;
         kd_window_get(&win_desc);
 
-        int third_view = win_desc.width / 3;
+        int half_view = win_desc.width / 2;
         
         GL_ERR("New frame");
 
-        if(GL_DEBUG_HELPERS && glPushDebugGroup) {
-                glPushDebugGroup(
-                        GL_DEBUG_SOURCE_APPLICATION,
-                        GL_DEBUG_TYPE_PUSH_GROUP,
-                        -1,
-                        "First Render");
-        }
-
-        glViewport(0,0, third_view, win_desc.height);
-        glScissor(0,0, third_view, win_desc.height);
+        glViewport(0,0, half_view, win_desc.height);
+        glScissor(0,0, half_view, win_desc.height);
         glEnable(GL_SCISSOR_TEST);
 
         render(1);
 
-        if(GL_DEBUG_HELPERS && glPopDebugGroup) {
-                glPopDebugGroup();
-        }
-
-
-        if(GL_DEBUG_HELPERS && glPushDebugGroup) {
-                glPushDebugGroup(
-                        GL_DEBUG_SOURCE_APPLICATION,
-                        GL_DEBUG_TYPE_PUSH_GROUP,
-                        -1,
-                        "Second Render");
-        }
-
-        glViewport(third_view, 0, third_view, win_desc.height);
-        glScissor(third_view, 0, third_view, win_desc.height);
+        glViewport(half_view, 0, half_view, win_desc.height);
+        glScissor(half_view, 0, half_view, win_desc.height);
         glEnable(GL_SCISSOR_TEST);
 
         render(2);
-
-        if(GL_DEBUG_HELPERS && glPopDebugGroup) {
-                glPopDebugGroup();
-        }
-
-        if(GL_DEBUG_HELPERS && glPushDebugGroup) {
-                glPushDebugGroup(
-                        GL_DEBUG_SOURCE_APPLICATION,
-                        GL_DEBUG_TYPE_PUSH_GROUP,
-                        -1,
-                        "Third Render");
-        }
-
-        glViewport(third_view * 2, 0, third_view, win_desc.height);
-        glScissor(third_view * 2, 0, third_view, win_desc.height);
-        glEnable(GL_SCISSOR_TEST);
-
-        render(3);
-
-        if(GL_DEBUG_HELPERS && glPopDebugGroup) {
-                glPopDebugGroup();
-        }
 
         /* reset state */
         glViewport(0, 0, win_desc.width, win_desc.height);
@@ -546,8 +465,8 @@ think()
 /* ----------------------------------------------- Application Description -- */
 
 
-KD_APP_NAME("OpenGL Cube")
-KD_APP_DESC("Render a spinning cube with stencil reflection")
+KD_APP_NAME("OpenGL Mesh Outline")
+KD_APP_DESC("Render a spinning cube, with outline")
 KD_APP_GRAPHICS_API("OpenGL")
 KD_APP_STARTUP_FN(setup)
 KD_APP_TICK_FN(think)
