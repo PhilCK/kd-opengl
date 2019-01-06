@@ -641,6 +641,8 @@ for i, proj in ipairs(projects) do
                             proj["postbuildcommands"] = "ditto " .. src_dir .." ${CONFIGURATION_BUILD_DIR}/assets/";
                         end
 
+                        postbuildcommands(proj["postbuildcommands"])
+
                     -- Linux Copy --
                     elseif os.target() == "linux" then
                         local full_dest_dir = "./bin/" .. config.name .. "/assets/"
@@ -658,7 +660,11 @@ for i, proj in ipairs(projects) do
                         win_src_dir = string.gsub(src_dir, "/", "\\")
                         win_dest_dir = ".\\bin\\" .. config.name .. "\\assets\\"
 
+                        print(win_src_dir .. "->" .. win_dest_dir)
+
                         proj["postbuildcommands"] = "xcopy /s/z/y \"" .. win_src_dir .. "*.*\" \"" .. win_dest_dir .. "*.*\""
+
+                        postbuildcommands(proj["postbuildcommands"])
                     end
 
                 end

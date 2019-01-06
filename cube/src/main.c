@@ -17,7 +17,7 @@
 #include <math.h>
 
 
-/* this OpenGL code is modified from https://open.gl/textures */
+/* this OpenGL code is modified from https://open.gl/depthstencils */
 
 
 /* ----------------------------------------------------------- Application -- */
@@ -349,7 +349,7 @@ think()
         glUniformMatrix4fv(model_i, 1, GL_FALSE, model);
 
         float view[16];
-        float eye[] = {2.5f, 2.5f, 2.5f};
+        float eye[] = {2.5f, 2.5f, 1.5f};
         float at[] = {0.f, 0.f, 0.f};
         float up[] = {0.f, 0.f, 1.f};
         kdm_mat4_lookat(eye, at, up, view);

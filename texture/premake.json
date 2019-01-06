@@ -1,7 +1,7 @@
 {
         "projects" : [
                 {
-                        "name" : "ogl_texture",
+                        "name" : "02_ogl_texture",
                         "kind" : "SharedLib",
                         "language" : "C",
 

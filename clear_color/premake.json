@@ -1,7 +1,7 @@
 {
         "projects" : [
                 {
-                        "name" : "ogl_clear_color",
+                        "name" : "00_ogl_clear_color",
                         "kind" : "SharedLib",
                         "language" : "C",
 

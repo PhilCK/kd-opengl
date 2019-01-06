@@ -1,7 +1,7 @@
 {
         "projects" : [
                 {
-                        "name" : "ogl_triangle",
+                        "name" : "01_ogl_triangle",
                         "kind" : "SharedLib",
                         "language" : "C",
 

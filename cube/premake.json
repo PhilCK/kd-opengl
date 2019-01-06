@@ -1,7 +1,7 @@
 {
         "projects" : [
                 {
-                        "name" : "ogl_cube",
+                        "name" : "03_ogl_cube",
                         "kind" : "SharedLib",
                         "language" : "C",
 
