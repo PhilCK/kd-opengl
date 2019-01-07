@@ -2,6 +2,10 @@
 #define COMMON_INCLUDED
 
 
+typedef unsigned int GLenum;
+typedef unsigned int GLuint;
+
+
 #define GL_ERR(msg)                                           \
 do {                                                          \
         GLuint err = glGetError();                            \
@@ -24,6 +28,23 @@ cmn_setup();
 
 uint64_t
 cmn_process_events();
+
+
+void
+cmn_push_debug_group(
+        const char *group_name);
+
+
+void
+cmn_pop_debug_group();
+
+
+void
+cmn_label_object(
+        GLenum obj,
+        GLuint obj_id,
+        const char *name);
+        
 
 
 #endif
@@ -137,6 +158,43 @@ cmn_process_events()
 
         return events;
 }
+
+
+void
+cmn_push_debug_group(
+        const char *group_name)
+{
+        if(GL_DEBUG_HELPERS && glPushDebugGroup) {
+                glPushDebugGroup(
+                        GL_DEBUG_SOURCE_APPLICATION,
+                        GL_DEBUG_TYPE_PUSH_GROUP,
+                        -1,
+                        group_name);
+        }
+
+}
+
+
+void
+cmn_pop_debug_group()
+{
+        if(GL_DEBUG_HELPERS && glPopDebugGroup) {
+                glPopDebugGroup();
+        }
+}
+
+
+void
+cmn_label_object(
+        GLenum obj,
+        GLuint obj_id,
+        const char *name)
+{
+        if(GL_DEBUG_HELPERS && glObjectLabel) {
+                glObjectLabel(obj, obj_id, -1, name);
+        }
+}
+
 
 
 #endif
