@@ -64,6 +64,24 @@ cmn_label_object(
 #include <stdio.h>
 
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#elif defined(_MSC_VER )
+#pragma warning(push)
+#pragma warning(disable: 4100)
+#endif
+
+#define STB_IMAGE_IMPLEMENTATION 
+#include <stb_image.h>
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#elif defined(_MSC_VER )
+#pragma warning(pop)
+#endif
+
+
 void
 cmn_setup()
 {

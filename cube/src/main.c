@@ -1,20 +1,16 @@
 #include <karbon/drive.h>
 #include <karbon/app.h>
 #include <karbon/math.h>
-
-#define COMMON_IMPL
-#include <common.h>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#define STB_IMAGE_IMPLEMENTATION 
 #include <stb_image.h>
-#pragma GCC diagnostic pop
-
 #include <GL/gl3w.h>
 #include <assert.h>
 #include <stdio.h>
 #include <math.h>
+
+#define COMMON_IMPL
+#include <common.h>
+
+
 
 
 /* this OpenGL code is modified from https://open.gl/depthstencils */
@@ -32,6 +28,8 @@ struct ogl_cube {
 void
 setup()
 {
+        kd_log(KD_LOG_INFO, "Cube Startup");
+
         memset(&cube, 0, sizeof(cube));
         cmn_setup();
 
@@ -126,7 +124,7 @@ setup()
 
         if(img1) {
                 char buf[512] = {0};
-                sprintf(buf, "Loaded Image 2: %dx%d:%d", w, h, c);
+                sprintf(buf, "Loaded Image 1: %dx%d:%d", w, h, c);
                 kd_log(KD_LOG_INFO, buf);
 
                 GLuint tex1;

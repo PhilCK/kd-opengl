@@ -1,19 +1,16 @@
 #include <karbon/drive.h>
 #include <karbon/app.h>
-
-#define COMMON_IMPL
-#include <common.h>
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#define STB_IMAGE_IMPLEMENTATION 
+#include <karbon/math.h>
 #include <stb_image.h>
-#pragma GCC diagnostic pop
-
 #include <GL/gl3w.h>
 #include <assert.h>
 #include <stdio.h>
 #include <math.h>
+
+#define COMMON_IMPL
+#include <common.h>
+
+
 
 
 /* this OpenGL code is modified from https://open.gl/textures */
@@ -30,6 +27,8 @@ struct ogl_texture {
 void
 setup()
 {
+        kd_log(KD_LOG_INFO, "Texture Startup");
+
         memset(&tex, 0, sizeof(tex));
         cmn_setup();
 

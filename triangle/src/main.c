@@ -25,6 +25,8 @@ struct ogl_triangle {
 void
 setup()
 {
+        kd_log(KD_LOG_INFO, "Triangle Startup");
+
         memset(&tri, 0, sizeof(tri));
 
         cmn_setup();

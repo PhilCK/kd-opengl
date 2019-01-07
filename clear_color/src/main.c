@@ -22,8 +22,11 @@ struct ogl_clear_color {
 void
 setup()
 {
+        kd_log(KD_LOG_INFO, "Clear Color Startup");
+
         memset(&clear_color, 0, sizeof(clear_color));
         cmn_setup();
+
         GL_ERR("GL - Setup");
 }
 

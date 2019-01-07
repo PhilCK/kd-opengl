@@ -152,7 +152,10 @@ for i, file in ipairs(project_files) do
 
         -- Update inc paths --
         if proj_table.include_dirs_public then
-            for k, f in ipairs(proj_table.include_dirs_public) do
+
+            local dirs = find_table(proj_table, "include_dirs_public");
+
+            for k, f in ipairs(dirs) do
             
                 local abs_dir   = path.getabsolute(file)
                 local dir       = path.getdirectory(abs_dir)
@@ -165,7 +168,10 @@ for i, file in ipairs(project_files) do
 
         -- Update inc paths --
         if proj_table.include_dirs then
-            for k, f in ipairs(proj_table.include_dirs) do
+
+            local dirs = find_table(proj_table, "include_dirs");
+
+            for k, f in ipairs(dirs) do
     
                 local abs_dir   = path.getabsolute(file)
                 local dir       = path.getdirectory(abs_dir)
