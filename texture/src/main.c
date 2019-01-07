@@ -95,7 +95,9 @@ setup()
         unsigned char* img1 = stbi_load(&t[0], &w, &h, &c, 0);
 
         if(img1) {
-                printf("Loaded Image 1: %dx%d:%d\n", w, h, c);
+                char buf[512] = {0};
+                sprintf(buf, "Loaded Image 1: %dx%d:%d", w, h, c);
+                kd_log(KD_LOG_INFO, buf);
 
                 GLuint tex1;
                 glGenTextures(1, &tex1);
@@ -119,6 +121,8 @@ setup()
                 if (GL_DEBUG_HELPERS && glObjectLabel) {
                         glObjectLabel(GL_TEXTURE, tex1, -1, "TexQuad::Sample1");
                 }
+        } else {
+                kd_log(KD_LOG_WARNING, "Failed to load Image 1");
         }
 
         memset(t, 0, sizeof(t));
@@ -128,7 +132,9 @@ setup()
         unsigned char *img2 = stbi_load(t, &w, &h, &c, 0);
 
         if(img2) {
-                printf("Loaded Image 2: %dx%d:%d\n", w, h, c);
+                char buf[512] = {0};
+                sprintf(buf, "Loaded Image 2: %dx%d:%d", w, h, c);
+                kd_log(KD_LOG_INFO, buf);
 
                 GLuint tex2;
                 glGenTextures(1, &tex2);
@@ -152,6 +158,8 @@ setup()
 
                 tex.tex2 = tex2;
                 stbi_image_free(img2);
+        } else {
+                kd_log(KD_LOG_WARNING, "Failed to load Image 2");
         }
         
         /* shd */
@@ -176,7 +184,7 @@ setup()
         if(vs_status == GL_FALSE) {
                 char buffer[1024];
                 glGetShaderInfoLog(vs_shd, sizeof(buffer), NULL, buffer);
-                printf("GL Shd Err: %s\n", buffer);
+                kd_log(KD_LOG_FATAL, buffer);
                 assert(!"Failed to build vs shd");
         }
 
@@ -201,7 +209,7 @@ setup()
         if(fs_status == GL_FALSE) {
                 char buffer[1024];
                 glGetShaderInfoLog(vs_shd, sizeof(buffer), NULL, buffer);
-                printf("GL Shd Err: %s\n", buffer);
+                kd_log(KD_LOG_FATAL, buffer);
                 assert(!"Failed to build fs shd");
         }
 
@@ -215,7 +223,7 @@ setup()
         if(pro_status == GL_FALSE) {
                 char buffer[1024];
                 glGetProgramInfoLog(pro, sizeof(buffer), NULL, buffer);
-                printf("GL Pro Err: %s\n", buffer);
+                kd_log(KD_LOG_FATAL, buffer);
                 assert(!"Failed to link");
         }
 

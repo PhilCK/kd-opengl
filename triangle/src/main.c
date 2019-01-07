@@ -80,7 +80,7 @@ setup()
         if(vs_status == GL_FALSE) {
                 char buffer[1024];
                 glGetShaderInfoLog(vs_shd, sizeof(buffer), NULL, buffer);
-                printf("GL Shd Err: %s\n", buffer);
+                kd_log(KD_LOG_FATAL, buffer);
                 assert(!"Failed to build vs shd");
         }
 
@@ -99,8 +99,8 @@ setup()
         if(fs_status == GL_FALSE) {
                 char buffer[1024];
                 glGetShaderInfoLog(vs_shd, sizeof(buffer), NULL, buffer);
-                printf("GL Shd Err: %s\n", buffer);
-                assert(!"Failed to build fs shd");
+                kd_log(KD_LOG_FATAL, buffer);
+                assert(!"Failed to build vs shd");
         }
 
         GLuint pro = glCreateProgram();
@@ -112,9 +112,9 @@ setup()
         glGetProgramiv(pro, GL_LINK_STATUS, &pro_status);
         if(pro_status == GL_FALSE) {
                 char buffer[1024];
-                glGetProgramInfoLog(pro, sizeof(buffer), NULL, buffer);
-                printf("GL Pro Err: %s\n", buffer);
-                assert(!"Failed to link");
+                glGetShaderInfoLog(vs_shd, sizeof(buffer), NULL, buffer);
+                kd_log(KD_LOG_FATAL, buffer);
+                assert(!"Failed to build fs shd");
         }
 
         glDeleteShader(vs_shd);

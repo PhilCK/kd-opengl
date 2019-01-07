@@ -118,7 +118,9 @@ setup()
         unsigned char* img1 = stbi_load(&t1[0], &w, &h, &c, 0);
 
         if(img1) {
-                printf("Loaded Image 1: %dx%d:%d\n", w, h, c);
+                char buf[512] = {0};
+                sprintf(buf, "Loaded Image 1: %dx%d:%d", w, h, c);
+                kd_log(KD_LOG_INFO, buf);
 
                 GLuint tex1;
                 glGenTextures(1, &tex1);
@@ -150,7 +152,9 @@ setup()
         unsigned char* img2 = stbi_load(&t2[0], &w, &h, &c, 0);
 
         if (img2) {
-                printf("Loaded Image 2: %dx%d:%d\n", w, h, c);
+                char buf[512] = {0};
+                sprintf(buf, "Loaded Image 2: %dx%d:%d", w, h, c);
+                kd_log(KD_LOG_INFO, buf);
 
                 GLuint tex2;
                 glGenTextures(1, &tex2);
@@ -202,7 +206,7 @@ setup()
         if(vs_status == GL_FALSE) {
                 char buffer[1024];
                 glGetShaderInfoLog(vs_shd, sizeof(buffer), NULL, buffer);
-                printf("GL Shd Err: %s\n", buffer);
+                kd_log(KD_LOG_FATAL, buffer);
                 assert(!"Failed to build vs shd");
         }
 
@@ -225,9 +229,9 @@ setup()
         glGetShaderiv(fs_shd, GL_COMPILE_STATUS, &fs_status);
         if(fs_status == GL_FALSE) {
                 char buffer[1024];
-                glGetShaderInfoLog(fs_shd, sizeof(buffer), NULL, buffer);
-                printf("GL Shd Err: %s\n", buffer);
-                assert(!"Failed to build fs shd");
+                glGetShaderInfoLog(vs_shd, sizeof(buffer), NULL, buffer);
+                kd_log(KD_LOG_FATAL, buffer);
+                assert(!"Failed to build vs shd");
         }
 
         GLuint pro = glCreateProgram();
@@ -240,7 +244,7 @@ setup()
         if(pro_status == GL_FALSE) {
                 char buffer[1024];
                 glGetProgramInfoLog(pro, sizeof(buffer), NULL, buffer);
-                printf("GL Pro Err: %s\n", buffer);
+                kd_log(KD_LOG_FATAL, buffer);
                 assert(!"Failed to link");
         }
 

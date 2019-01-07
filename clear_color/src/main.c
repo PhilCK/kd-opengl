@@ -23,26 +23,7 @@ void
 setup()
 {
         memset(&clear_color, 0, sizeof(clear_color));
-
         cmn_setup();
-
-        if (gl3wInit()) {
-                assert(!"FAILED TO INIT");
-        }
-        
-        /* print out version */
-        printf("OpenGL %s, GLSL %s, OGL %s\n",
-                glGetString(GL_VERSION),
-                glGetString(GL_SHADING_LANGUAGE_VERSION),
-                glGetString(GL_VERSION));
-
-        if (!gl3wIsSupported(3, 0)) {
-                assert(!"OGL 3 0 not supported");
-        }
-
-        printf("OpenGL %s, GLSL %s\n", glGetString(GL_VERSION),
-                glGetString(GL_SHADING_LANGUAGE_VERSION));
-
         GL_ERR("GL - Setup");
 }
 
