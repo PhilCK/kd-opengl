@@ -44,7 +44,7 @@ cmn_label_object(
         GLenum obj,
         GLuint obj_id,
         const char *name);
-        
+
 
 
 #endif
@@ -98,7 +98,7 @@ cmn_setup()
         char buf[512] = {0};
         sprintf(
                 buf,
-                "OpenGL %s, GLSL %s, OGL %s\n",
+                "OpenGL %s, GLSL %s, OGL %s",
                 glGetString(GL_VERSION),
                 glGetString(GL_SHADING_LANGUAGE_VERSION),
                 glGetString(GL_VERSION));
@@ -176,7 +176,7 @@ cmn_process_events()
 
         return events;
 }
-
+  
 
 void
 cmn_push_debug_group(

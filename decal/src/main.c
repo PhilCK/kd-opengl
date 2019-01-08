@@ -26,14 +26,16 @@ struct ogl_decal {
 
         /* Render Scene */
         GLuint sce_vbo;
-        GLuint sce_tex1, sce_tex2;
-        GLuint sce_gbuff_pro;
-        GLuint sce_light_pro;
+        GLuint sce_tex1;
+        GLuint sce_gbuff_pro, sce_light_pro;
         GLuint sce_fbo;
+        GLuint sce_fbo_out[5];
+        GLuint sce_fbo_depth;
 
         /* Render Decal */
         GLuint dec_vbo;
         GLuint dec_pro;
+        GLuint dec_tex1;
 
         /* Fullscreen Blit */
         GLuint fsb_vbo;
@@ -44,7 +46,7 @@ struct ogl_decal {
 
 
 GLuint
-gl_create_program(const char *vs_src, const char *fs_src) {
+gl_create_program(const char * name, const char *vs_src, const char *fs_src) {
         GLuint vs_shd = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vs_shd, 1, &vs_src, NULL);
         glCompileShader(vs_shd);
@@ -55,6 +57,8 @@ gl_create_program(const char *vs_src, const char *fs_src) {
                 glGetShaderInfoLog(vs_shd, sizeof(buffer), NULL, buffer);
                 kd_log(KD_LOG_FATAL, buffer);
                 assert(!"Failed to build vs shd");
+
+                return 0;
         }
 
         GLuint fs_shd = glCreateShader(GL_FRAGMENT_SHADER);
@@ -67,6 +71,8 @@ gl_create_program(const char *vs_src, const char *fs_src) {
                 glGetShaderInfoLog(vs_shd, sizeof(buffer), NULL, buffer);
                 kd_log(KD_LOG_FATAL, buffer);
                 assert(!"Failed to build vs shd");
+
+                return 0;
         }
 
         GLuint pro = glCreateProgram();
@@ -81,7 +87,15 @@ gl_create_program(const char *vs_src, const char *fs_src) {
                 glGetProgramInfoLog(pro, sizeof(buffer), NULL, buffer);
                 kd_log(KD_LOG_FATAL, buffer);
                 assert(!"Failed to link");
+
+                return 0;
         }
+
+        char msg[1024] = {0};
+        sprintf(msg, "Loaded program %s", name);
+        kd_log(KD_LOG_INFO, msg);
+
+        cmn_label_object(GL_PROGRAM, pro, name);
 
         glDeleteShader(vs_shd);
         glDeleteShader(fs_shd);
@@ -90,10 +104,62 @@ gl_create_program(const char *vs_src, const char *fs_src) {
 }
 
 
+GLuint
+gl_create_texture(const char *file) {
+        int w, h, c;
+        char t1[2048] = {0};
+        kd_ctx_get_exe_dir(t1, 0);
+        strcat(t1, "assets/");
+        strcat(t1, file);
+        GLuint tex = 0;
+
+        unsigned char* img = stbi_load(&t1[0], &w, &h, &c, 0);
+
+        if(!img) {
+                char msg[2048] = {0};
+                sprintf(msg, "Failed to load %s", t1);
+                kd_log(KD_LOG_WARNING, msg);
+                assert(!"Failed to load texture!");
+                return 0;
+        }
+
+        char buf[2048] = {0};
+        sprintf(buf, "Loaded image: %s %dx%d:%d", file, w, h, c);
+        kd_log(KD_LOG_INFO, buf);
+
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+
+        glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_RGB,
+                w,
+                h,
+                0,
+                c == 4 ? GL_RGBA : GL_RGB,
+                GL_UNSIGNED_BYTE,
+                img);
+
+        stbi_image_free(img);
+
+        char tag[512] = {0};
+        sprintf(tag, "%s - %dx%d:%d", file, w, h, c);
+        cmn_label_object(GL_TEXTURE, tex, tag);
+
+        return tex;
+}
+
+
 void
 setup()
 {
         kd_log(KD_LOG_INFO, "Decal Startup");
+        int i;
+
+        struct kd_window_desc win_desc;
+        win_desc.type_id = KD_STRUCT_WINDOW_DESC;
+        kd_window_get(&win_desc);
 
         memset(&glctx, 0, sizeof(glctx));
         cmn_setup();
@@ -153,7 +219,7 @@ setup()
                 " TexCoordOut     = vec3(TexCoord0, 0.0);\n"
                 "}\n";
 
-        glctx.sce_gbuff_pro = gl_create_program(gbuf_vs, gbuf_fs);
+        glctx.sce_gbuff_pro = gl_create_program("Fill GBuf", gbuf_vs, gbuf_fs);
 
 
         /* dir light */
@@ -291,7 +357,136 @@ setup()
                         /* "FragColor = vec4(Color, 1.0);\n"*/
                 "}\n";
 
-        glctx.sce_light_pro = gl_create_program(dir_vs, dir_fs);
+        glctx.sce_light_pro = gl_create_program("Dir Light", dir_vs, dir_fs);
+        glctx.sce_tex1 = gl_create_texture("sample.png");
+
+        GL_ERR("GBuf rsrc");
+
+        float cube[] = {
+                1.f
+        };
+
+        const char *gnames[] = {
+                "GBuf:Positions",
+                "GBuf:Diffuse",
+                "GBuf:Normals",
+                "GBuf:TexC",
+                "GBuf:Final",
+        };
+
+        int count = sizeof(glctx.sce_fbo_out) / sizeof(glctx.sce_fbo_out[0]);
+
+        glGenTextures(count, glctx.sce_fbo_out);
+
+        for(i = 0; i < count; ++i) {
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, glctx.sce_fbo_out[i]);
+                glTexImage2D(
+                        GL_TEXTURE_2D,
+                        0,
+                        GL_RGBA32F,
+                        win_desc.width,
+                        win_desc.height,
+                        0,
+                        GL_RGBA,
+                        GL_FLOAT,
+                        0);
+
+                glTexParameteri(
+                        GL_TEXTURE_2D,
+                        GL_TEXTURE_WRAP_S,
+                        GL_CLAMP_TO_EDGE);
+
+                glTexParameteri(
+                        GL_TEXTURE_2D,
+                        GL_TEXTURE_WRAP_T,
+                        GL_CLAMP_TO_EDGE);
+
+                glTexParameteri(
+                        GL_TEXTURE_2D,
+                        GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR);
+
+                glTexParameteri(
+                        GL_TEXTURE_2D,
+                        GL_TEXTURE_MAG_FILTER,
+                        GL_LINEAR);
+                
+                cmn_label_object(GL_TEXTURE, glctx.sce_fbo_out[i], gnames[i]);
+        }
+
+        glGenTextures(1, &glctx.sce_fbo_depth);
+        glBindTexture(GL_TEXTURE_2D, glctx.sce_fbo_depth);
+
+        glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_DEPTH_COMPONENT32F,
+                win_desc.width,
+                win_desc.height,
+                0,
+                GL_DEPTH_COMPONENT,
+                GL_FLOAT,
+                0);
+
+        glTexParameteri(
+                GL_TEXTURE_2D,
+                GL_TEXTURE_WRAP_S,
+                GL_CLAMP_TO_EDGE);
+
+        glTexParameteri(
+                GL_TEXTURE_2D,
+                GL_TEXTURE_WRAP_T,
+                GL_CLAMP_TO_EDGE);
+
+        glTexParameteri(
+                GL_TEXTURE_2D,
+                GL_TEXTURE_MIN_FILTER,
+                GL_LINEAR);
+
+        glTexParameteri(
+                GL_TEXTURE_2D,
+                GL_TEXTURE_MAG_FILTER,
+                GL_LINEAR);
+
+        cmn_label_object(GL_TEXTURE, glctx.sce_fbo_depth, "GBuf:Depth");
+
+        GL_ERR("Create FBO Targets");
+
+        glGenFramebuffers(1, &glctx.sce_fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, glctx.sce_fbo);
+
+        GLenum dbufs[5];
+        assert(count == 5);
+
+        for(i = 0; i < count; ++i) {
+                glFramebufferTexture2D(
+                        GL_FRAMEBUFFER,
+                        GL_COLOR_ATTACHMENT0 + i,
+                        GL_TEXTURE_2D,
+                        glctx.sce_fbo_out[i],
+                        0);
+
+                dbufs[i] = GL_COLOR_ATTACHMENT0 + i;
+        }
+
+        glDrawBuffers(count, dbufs);
+
+        glFramebufferTexture2D(
+                GL_FRAMEBUFFER,
+                GL_DEPTH_ATTACHMENT,
+                GL_TEXTURE_2D,
+                glctx.sce_fbo_depth,
+                0);
+
+        GL_ERR("Marco");
+
+        GLenum state = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        assert(state == GL_FRAMEBUFFER_COMPLETE);
+
+        cmn_label_object(GL_FRAMEBUFFER, glctx.sce_fbo, "GBuf:FBO");
+
+        GL_ERR("Fbo create");
 
         /* decals */
         const char dec_vs[] = ""
@@ -387,7 +582,8 @@ setup()
                         "}\n"
                 "}\n";
 
-        glctx.dec_pro = gl_create_program(dec_vs, dec_fs);
+        glctx.dec_pro = gl_create_program("Decal", dec_vs, dec_fs);
+        glctx.dec_tex1 = gl_create_texture("sample2.png");
 
         /* blit */
         const char blit_vs[] = 
@@ -411,7 +607,7 @@ setup()
                 " fs_out_fragcolor = texture(samp_diffuse_01, fs_in_texcoord);\n"
                 "}\n";
 
-        glctx.fsb_pro = gl_create_program(blit_vs, blit_fs);
+        glctx.fsb_pro = gl_create_program("Blit", blit_vs, blit_fs);
 
         cmn_pop_debug_group();
 }
@@ -420,6 +616,7 @@ setup()
 void
 shutdown()
 {
+          /* todo cleanup */
 }
 
 
@@ -428,6 +625,9 @@ render(int steps) {
         struct kd_window_desc win_desc;
         win_desc.type_id = KD_STRUCT_WINDOW_DESC;
         kd_window_get(&win_desc);
+
+        /* render scene */
+
 }
 
 void
