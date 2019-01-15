@@ -362,10 +362,6 @@ setup()
 
         GL_ERR("GBuf rsrc");
 
-        float cube[] = {
-                1.f
-        };
-
         const char *gnames[] = {
                 "GBuf:Positions",
                 "GBuf:Diffuse",
@@ -411,7 +407,7 @@ setup()
                         GL_TEXTURE_2D,
                         GL_TEXTURE_MAG_FILTER,
                         GL_LINEAR);
-                
+
                 cmn_label_object(GL_TEXTURE, glctx.sce_fbo_out[i], gnames[i]);
         }
 
@@ -487,6 +483,65 @@ setup()
         cmn_label_object(GL_FRAMEBUFFER, glctx.sce_fbo, "GBuf:FBO");
 
         GL_ERR("Fbo create");
+
+        GLfloat cube[] = {
+                /* pos v3 - tex v2 - norma v3 */
+                +1.f, -1.f, +1.f, /**/ 1.f, 0.f, /**/ +0.f, -1.f, +0.f,
+                -1.f, -1.f, +1.f, /**/ 1.f, 1.f, /**/ +0.f, -1.f, +0.f,
+                -1.f, -1.f, -1.f, /**/ 0.f, 0.f, /**/ +0.f, -1.f, +0.f,
+        
+                -1.f, +1.f, -1.f, /**/ 0.f, 0.f, /**/ +0.f, +1.f, +0.f,
+                -1.f, +1.f, +1.f, /**/ 1.f, 1.f, /**/ +0.f, +1.f, +0.f,
+                +1.f, +1.f, +1.f, /**/ 0.f, 1.f, /**/ +0.f, +1.f, +0.f,
+
+                +1.f, +1.f, -1.f, /**/ 1.f, 0.f, /**/ +1.f, +0.f, +0.f,
+                +1.f, +1.f, +1.f, /**/ 1.f, 1.f, /**/ +1.f, +0.f, +0.f,
+                +1.f, -1.f, -1.f, /**/ 0.f, 1.f, /**/ +1.f, +0.f, +0.f,
+
+                +1.f, +1.f, +1.f, /**/ 1.f, 0.f, /**/ +0.f, +0.f, +1.f,
+                -1.f, +1.f, +1.f, /**/ 1.f, 1.f, /**/ +0.f, +0.f, +1.f,
+                -1.f, -1.f, +1.f, /**/ 0.f, 1.f, /**/ +0.f, +0.f, +1.f,
+
+                -1.f, -1.f, +1.f, /**/ 0.f, 0.f, /**/ -1.f, +0.f, +0.f,
+                -1.f, +1.f, +1.f, /**/ 1.f, 0.f, /**/ -1.f, +0.f, +0.f,
+                -1.f, +1.f, -1.f, /**/ 1.f, 1.f, /**/ -1.f, +0.f, +0.f,
+
+                +1.f, -1.f, -1.f, /**/ 1.f, 0.f, /**/ +0.f, +0.f, -1.f,
+                -1.f, -1.f, -1.f, /**/ 1.f, 1.f, /**/ +0.f, +0.f, -1.f,
+                -1.f, +1.f, -1.f, /**/ 0.f, 1.f, /**/ +0.f, +0.f, -1.f,
+
+                +1.f, -1.f, -1.f, /**/ 0.f, 0.f, /**/ +0.f, -1.f, +0.f,
+                +1.f, -1.f, +1.f, /**/ 1.f, 0.f, /**/ +0.f, -1.f, +0.f,
+                -1.f, -1.f, -1.f, /**/ 0.f, 1.f, /**/ +0.f, -1.f, +0.f,
+
+                +1.f, +1.f, -1.f, /**/ 0.f, 0.f, /**/ +0.f, +1.f, +0.f,
+                -1.f, +1.f, -1.f, /**/ 1.f, 0.f, /**/ +0.f, +1.f, +0.f,
+                +1.f, +1.f, +1.f, /**/ 0.f, 1.f, /**/ +0.f, +1.f, +0.f,
+
+                +1.f, -1.f, -1.f, /**/ 0.f, 0.f, /**/ +1.f, +0.f, +0.f,
+                +1.f, +1.f, -1.f, /**/ 1.f, 0.f, /**/ +1.f, +0.f, +0.f,
+                +1.f, -1.f, +1.f, /**/ 0.f, 1.f, /**/ +1.f, +0.f, +0.f,
+
+                +1.f, -1.f, +1.f, /**/ 0.f, 0.f, /**/ +0.f, +0.f, +1.f,
+                +1.f, +1.f, +1.f, /**/ 1.f, 0.f, /**/ +0.f, +0.f, +1.f,
+                -1.f, -1.f, +1.f, /**/ 0.f, 1.f, /**/ +0.f, +0.f, +1.f,
+
+                -1.f, -1.f, -1.f, /**/ 0.f, 1.f, /**/ -1.f, +0.f, +0.f,
+                -1.f, -1.f, +1.f, /**/ 0.f, 0.f, /**/ -1.f, +0.f, +0.f,
+                -1.f, +1.f, -1.f, /**/ 1.f, 1.f, /**/ -1.f, +0.f, +0.f,
+
+                +1.f, +1.f, -1.f, /**/ 0.f, 0.f, /**/ +0.f, +0.f, -1.f,
+                +1.f, -1.f, -1.f, /**/ 1.f, 0.f, /**/ +0.f, +0.f, -1.f,
+                -1.f, +1.f, -1.f, /**/ 0.f, 1.f, /**/ +0.f, +0.f, -1.f,
+        };
+
+        glGenBuffers(1, &glctx.sce_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, glctx.sce_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
+
+        cmn_label_object(GL_BUFFER, glctx.sce_vbo, "Scene Cube");
+
+        GL_ERR("Create Scene VBO");
 
         /* decals */
         const char dec_vs[] = ""
@@ -609,6 +664,19 @@ setup()
 
         glctx.fsb_pro = gl_create_program("Blit", blit_vs, blit_fs);
 
+        float fs_tri[] = {
+                /* x,y,z - s,t */
+                -1.f, +3.f, 0.f, 0.f, 2.f,
+                -1.f, -1.f, 0.f, 0.f, 0.f,
+                +3.f, -1.f, 0.f, 2.f, 0.f,
+        };
+
+        glGenBuffers(1, &glctx.fsb_vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, glctx.fsb_vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(fs_tri), fs_tri, GL_STATIC_DRAW);
+
+        cmn_label_object(GL_BUFFER, glctx.fsb_vbo, "FSTri:f3f2");
+
         cmn_pop_debug_group();
 }
 
@@ -622,12 +690,62 @@ shutdown()
 
 void
 render(int steps) {
+        kd_result ok = KD_RESULT_OK;
+
         struct kd_window_desc win_desc;
         win_desc.type_id = KD_STRUCT_WINDOW_DESC;
-        kd_window_get(&win_desc);
+        ok = kd_window_get(&win_desc);
 
-        /* render scene */
+        float world[16];
+        ok = kdm_mat4_id(world);
 
+        float view[16];
+        float at[] = {0,0,0};
+        float up[] = {0,1,0};
+        float eye[] = {10, 10, 10};
+        ok = kdm_mat4_lookat(eye, at, up, view);
+
+        float proj[16];
+        float ratio = (float)(win_desc.width) / (float)win_desc.height;
+        float fov = KDM_TAU * 0.125f;
+        kdm_mat4_perspective_projection(ratio, 0.1f, 100.f, fov, proj);
+
+        float view_proj[16];
+        kdm_mat4_multiply(view, proj, view_proj);
+
+        float wvp[16];
+        kdm_mat4_multiply(world, view_proj, wvp);
+
+        /* setup */
+        glBindVertexArray(glctx.vao);
+
+        /* fill gbuffer */
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, glctx.sce_fbo);
+        glDrawBuffers(5, glctx.sce_fbo_out);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        
+        glUseProgram(glctx.sce_gbuff_pro);
+        glBindBuffer(GL_ARRAY_BUFFER, glctx.sce_vbo);
+
+        GLsizei jmp = 8 * sizeof(GLfloat);
+        void *off = 0;
+
+        GLint pos_idx = glGetAttribLocation(glctx.sce_gbuff_pro, "Position");
+        if(pos_idx > -1) {
+                glEnableVertexAttribArray(pos_idx);
+                glVertexAttribPointer(pos_idx, 3, GL_FLOAT, GL_FALSE, jmp, off);
+        }
+
+        off = (void*)(3 * sizeof(GLfloat));
+
+
+
+
+        /* decal renderpass */
+
+        /* dir light renderpass */
+
+        /* final renderpass */
 }
 
 void
