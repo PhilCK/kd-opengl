@@ -678,6 +678,8 @@ setup()
         cmn_label_object(GL_BUFFER, glctx.fsb_vbo, "FSTri:f3f2");
 
         cmn_pop_debug_group();
+
+        GL_ERR("End Setup");
 }
 
 
@@ -690,6 +692,9 @@ shutdown()
 
 void
 render(int steps) {
+        GL_ERR("Start Render");
+
+        int i;
         kd_result ok = KD_RESULT_OK;
 
         struct kd_window_desc win_desc;
@@ -718,14 +723,35 @@ render(int steps) {
 
         /* setup */
         glBindVertexArray(glctx.vao);
+        GL_ERR("Setup Render");
 
         /* fill gbuffer */
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, glctx.sce_fbo);
-        glDrawBuffers(5, glctx.sce_fbo_out);
+
+        GLenum dbufs[5];
+
+        for(i = 0; i < 5; ++i) {
+                glFramebufferTexture2D(
+                        GL_FRAMEBUFFER,
+                        GL_COLOR_ATTACHMENT0 + i,
+                        GL_TEXTURE_2D,
+                        glctx.sce_fbo_out[i],
+                        0);
+
+                dbufs[i] = GL_COLOR_ATTACHMENT0 + i;
+        }
+
+        glDrawBuffers(5, dbufs);
+
+        GL_ERR("Bind Render");
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+        GL_ERR("Bind Render");
         
         glUseProgram(glctx.sce_gbuff_pro);
         glBindBuffer(GL_ARRAY_BUFFER, glctx.sce_vbo);
+
+        GL_ERR("Bind Render");
 
         GLsizei jmp = 8 * sizeof(GLfloat);
         void *off = 0;
@@ -737,9 +763,6 @@ render(int steps) {
         }
 
         off = (void*)(3 * sizeof(GLfloat));
-
-
-
 
         /* decal renderpass */
 
