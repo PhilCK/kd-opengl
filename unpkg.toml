@@ -1,0 +1,36 @@
+# KD-Chunk_edit dependencies
+
+# Karbon Drive
+
+[kabon-drive]
+url = "https://github.com/karbon-drive/karbon-drive.git"
+type = "git"
+
+
+# Premake
+
+[premake-bin-osx]
+url = "https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-macosx.tar.gz" # Resource URL
+type = "archive" 
+select = "premake5"
+platform = "macOS" 
+
+
+[premake-bin-linux]
+url = "https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-linux.tar.gz"
+type = "archive"
+select = "premake5"
+platform = "Linux"
+
+
+[premake-bin-win]
+url = "https://github.com/premake/premake-core/releases/download/v5.0.0-alpha13/premake-5.0.0-alpha13-windows.zip"
+type = "archive"
+select = "premake5.exe"
+platform = "Windows"
+
+
+[premake-data]
+url = "https://github.com/PlainOldData/premake_data.git"
+type = "git"
+select = "premake5.lua"
